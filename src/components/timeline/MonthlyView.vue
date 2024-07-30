@@ -180,7 +180,7 @@ const empData = computed(() => {
     }));
 });
 
-const currentProject = ref<ProjectTypeTimeline>({})
+const currentProject = ref<ProjectTypeTimeline>()
 
 
 const getProjectInfo = (proj: ProjectTypeTimeline) => {
