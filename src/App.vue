@@ -2,32 +2,24 @@
 import MonthlyView from './components/timeline/MonthlyView.vue';
 import { ref } from 'vue';
 import type { TalentPoolTypeTimeline } from './types/types';
+import useGetEmployees from "@/composables/useGetEmployees"
+import ViewsDropdown from './components/dropdown/ViewsDropdown.vue';
+import { useViews } from '@/stores/views';
+import TimeLineYearlyView from './components/timeline/TimeLineYearlyView.vue';
 
-const projects = ref([
-  {
-    name: "Project 1",
-    startDate: "1721606400000",
-    endDate: "1729555200000",
-    billability_status: "string",
-    project_hours: "2",
-    type: "string",
-    changes: [],
-    id:"string",
-    color:"string"
-  }
-])
-const data = ref<TalentPoolTypeTimeline[]>([
-{"Employee name":"Benjamin","profile_image":"", id:"1", "Client ready":true, Specialization:"Frontend", "Seniority level":"Junior","Position":"Position", allProjects:projects.value},
-{"Employee name":"Benjamin","profile_image":"", id:"1", "Client ready":true, Specialization:"Frontend", "Seniority level":"Junior","Position":"Position", allProjects:projects.value},
-{"Employee name":"Benjamin","profile_image":"", id:"1", "Client ready":true, Specialization:"Frontend", "Seniority level":"Junior","Position":"Position", allProjects:projects.value},
-{"Employee name":"Benjamin","profile_image":"", id:"1", "Client ready":true, Specialization:"Frontend", "Seniority level":"Junior","Position":"Position", allProjects:projects.value},
-{"Employee name":"Benjamin","profile_image":"", id:"1", "Client ready":true, Specialization:"Frontend", "Seniority level":"Junior","Position":"Position", allProjects:projects.value},
-])
+
+const year = ref(new Date().getFullYear())
+const view = useViews()
 </script>
 
 <template>
-  <div class="mt-10">
-    <MonthlyView :data="data"/>
+  <div class="m-10">
+    <div class="flex justify-end my-2">
+      <ViewsDropdown />
+    </div>
+    <MonthlyView :data="useGetEmployees(year).employees as TalentPoolTypeTimeline[] || []" v-model="year"
+      v-if="view.timeLineView === 'Month'" />
+    <TimeLineYearlyView v-if="view.timeLineView === 'Year'" />
   </div>
 </template>
 
@@ -40,6 +32,4 @@ header {
   display: block;
   margin: 0 auto 2rem;
 }
-
-
 </style>

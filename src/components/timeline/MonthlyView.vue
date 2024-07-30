@@ -1,7 +1,8 @@
 <template>
     <div>
-        {{ empData }}
-        <div class="fixedColumn" @scroll="$emit('handleScroll', $event)">
+        <div class="flex justify-end">
+        </div>
+        <div class="fixedColumn">
             <table aria-describedby="table">
                 <thead>
                     <tr>
@@ -11,7 +12,7 @@
 
                                 <div class="border rounded-lg h-20 w-44 flex items-center justify-center gap-2">
                                     <MonthSelect @select="handleSelect($event)" />
-                                    <div @click="view.timeLineView = 'yearly'" class="cursor-pointer">
+                                    <div class="cursor-pointer">
                                         <div class="flex items-center justify-center gap-2">
                                             <p class="flex gap-2 font-bold text-xl N800">
                                                 <span>{{ formattedMonthYear?.split(" ")[0]?.slice(0, 3) }}</span>
@@ -52,7 +53,7 @@
                     <tr v-for="emp in empData" :key="emp?.id" class="hover:bg-gray-100">
                         <td>
                             <div>
-                                <div class="flex gap-3 cursor-pointer" @click="$emit('openPortfolio', emp?.id)">
+                                <div class="flex gap-3 cursor-pointer">
                                     <ProfileImageComponent :initials="nameToInit(emp.name)" widthSize="5rem"
                                         heightSize="5rem" :imgSrc="emp?.profile_image" text-size="text-lg" />
                                     <div class="text-left">
@@ -68,11 +69,11 @@
 
                             <div v-for="(proj, projInd) in filterProjectsByMonthAndYear(emp?.projects, currentMonth + 1, currentYear)"
                                 :key="projInd + emp?.id"
-                                :class="({ 'invisible-project': !isProjectVisible(week.dates, proj.startDate, proj.endDate) || areAllWeekendDays(week.dates) })"
+                                :class="({ 'invisible-project': !isProjectVisible(week.dates, proj.startDate, proj.endDate) })"
                                 class="m-2">
                                 <div
                                     :style="{ display: 'flex', justifyContent: week.dates?.includes(moment(proj?.endDate).format('YYYY-MM-DD')) ? 'start' : 'end' }">
-                                    <div @click="getProjectInfo(proj)" class="cursor-pointer" :style="{
+                                    <div :style="{
                                         backgroundColor: proj?.color ?? stringToColor(proj.name),
                                         width: `${getProjectStyleForStartWeek(week.dates, proj.startDate, proj.endDate, 'project').width}%`,
                                         marginTop: '10px',
@@ -86,7 +87,7 @@
                                                 {{ proj?.name }}
                                             </p>
                                         </div>
-
+<DropDownComponent :optionsList="['View', 'Edit color']" :item="proj" @selectedOption="selectedOption"/>
                                     </div>
                                 </div>
                             </div>
@@ -96,31 +97,39 @@
             </table>
         </div>
 
+<ModalComponent :open="openModal" @close="openModal=false" title="Change project color" >
+<div class="">
+<ColorPicker v-model="color"/>
+</div>
+</ModalComponent>
 
-
+<ModalComponent :open="viewProject" @close="viewProject=false" title="View Project">
+<ProjectDetials :project="currentProject"/>
+</ModalComponent>
     </div>
 </template>
 
 <script setup lang="ts">
 import moment from "moment";
-import { type PropType, computed, ref, } from "vue";
+import { type PropType, computed, ref, watch, } from "vue";
 import ArrowRightIcon from "@/assets/ArrowRightIcon.vue";
 import ArrowLeftIcon from "@/assets/ArrowLeftIcon.vue";
 import ProfileImageComponent from "@/components/Avatar/ProfileImageComponent.vue";
 import Button from "@/components/Button.vue"
-import { currentDate, nameToInit, stringToColor, getDayInfo, isColorLight } from "@/helpers/util";
+import { currentDate, nameToInit, stringToColor, getDayInfo, isColorLight, formatDate } from "@/helpers/util";
 import MonthSelect from "@/components/MonthSelect.vue";
+import ModalComponent from "../ModalComponent.vue";
+import ColorPicker from "../ColorPicker.vue";
 import type {ProjectTypeTimeline, TalentPoolTypeTimeline } from "@/types/types";
 import useTimeLine from "@/composables/useTimeLine";
 import {
-    areAllWeekendDays,
     isProjectVisible,
     getProjectStyleForStartWeek,
     filterProjectsByMonthAndYear
 } from "@/helpers/timeline";
-import { useprojectManagerStore } from "@/stores/projectStore";
+import ProjectDetials from "@/components/ProjectDetails.vue"
 
-
+import DropDownComponent from "../dropdown/DropDownComponent.vue";
 
 const {
     nextMonth,
@@ -137,14 +146,17 @@ const props = defineProps({
         type: Array as PropType<TalentPoolTypeTimeline[]>,
         required: true
     },
+    modelValue:{
+        type:Number
+    }
 });
+const emit = defineEmits(["update:modelValue"]);
 
 const openModal = ref(false);
 const projectId = ref("");
 const previousColor = ref("");
 const color = ref("");
-
-const view = useprojectManagerStore();
+const viewProject = ref(false)
 const empData = computed(() => {
     return props.data?.map((emp => {
         return {
@@ -154,12 +166,21 @@ const empData = computed(() => {
             position: emp?.Position,
             specialization: emp?.Specialization,
             seniority_level: emp?.["Seniority level"],
-            projects: emp?.allProjects,
+            projects: emp?.allProjects?.map(proj=>{
+                return{
+                    name:proj?.name,
+                    startDate: formatDate(proj?.startDate),
+                    endDate: formatDate(proj?.endDate),
+                    id:proj.id,
+                    color:proj.color
+                }
+            }),
             id: Number(emp?.id),
         };
     }));
 });
 
+const currentProject = ref<ProjectTypeTimeline>({})
 
 
 const getProjectInfo = (proj: ProjectTypeTimeline) => {
@@ -170,6 +191,21 @@ const getProjectInfo = (proj: ProjectTypeTimeline) => {
 };
 
 
+const selectedOption = (selectedItem:string, item:ProjectTypeTimeline)=>{
+    
+switch(selectedItem){
+case "Edit color":
+    getProjectInfo(item)
+    break;
+    case "View":
+viewProject.value=true;
+currentProject.value=item
+}
+
+}
+watch(currentYear,(val)=>{
+emit("update:modelValue", val)
+})
 </script>
 
 <style scoped>
@@ -266,5 +302,6 @@ th {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 50px;
 }
 </style>

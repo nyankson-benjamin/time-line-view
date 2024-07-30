@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 
-export const useprojectManagerStore = defineStore({
+export const useViews = defineStore({
     id: "timeline",
     state: () => ({
       staffListType:"table" as "table" | "list",
-      timeLineView:"monthly" as "monthly" | "yearly"
+      timeLineView:"Month" as "Month" | "Year" | "Week"
     }),
 
     persist: true
