@@ -6,7 +6,7 @@ import useGetEmployees from "@/composables/useGetEmployees"
 import ViewsDropdown from './components/dropdown/ViewsDropdown.vue';
 import { useViews } from '@/stores/views';
 import TimeLineYearlyView from './components/timeline/TimeLineYearlyView.vue';
-
+import UnderContruction from './components/UnderContruction.vue';
 
 const year = ref(new Date().getFullYear())
 const view = useViews()
@@ -19,7 +19,7 @@ const view = useViews()
     </div>
     <MonthlyView :data="useGetEmployees(year).employees as TalentPoolTypeTimeline[] || []" v-model="year"
       v-if="view.timeLineView === 'Month'" />
-    <TimeLineYearlyView v-if="view.timeLineView === 'Year'" />
+    <UnderContruction v-if="view.timeLineView === 'Year' || view.timeLineView==='Week'" />
   </div>
 </template>
 
